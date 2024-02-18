@@ -1,0 +1,93 @@
+{% extends 'main.html' %}
+{% block content %}
+
+<a href="{% url 'create-classroom' %}"><button class="btn btn-primary m-2">
+    + Create Room
+</button></a>
+<a href="{% url 'create-subject' %}"><button class="btn btn-outline-primary m-2">
+    + Create Subject
+</button></a>
+
+<br><hr><br>
+
+<div class="container">
+<div class="row">
+
+    <div class="col border-end">
+        <h1>Subjects</h1>
+        <br>
+
+        <a href="{% url 'home' %}"><h2>All</h2></a>
+        {% for subject in subjects %}
+
+            <a href="{% url 'home' %}?q={{subject.name}}"><h2>{{subject.name}}</h2></a>
+
+        {% endfor %}
+    </div>
+
+    <div class="col-6">
+        <h1>Classrooms</h1>
+        {% if not_new == False or request.user.is_authenticated == False %}
+            <h5>Create a classroom or get invited into one to start!</h5>
+        {% else %}
+            {% if count == 0 %}
+                <h5>No classrooms found</h5>
+            {% else %}
+                <h5>Classrooms found: {{count}}</h5>
+            {% endif %}
+        {% endif %}
+        <br>
+
+        {% for classroom in classrooms %}
+            {% if request.user in classroom.participants.all or request.user.id == classroom.host.id and request.user.is_authenticated or request.user.is_superuser %}
+                <div class="m-3 rounded border p-3">
+                    <span>{{classroom.host}}</span>
+
+                    <a href="{% url 'classroom' classroom.id %}"><h1>{{classroom.name}}</h1></a>
+                    <h3>{{classroom.subject}}</h3>
+
+                    {% if classroom.description != None %}
+                        <br>
+                        <p>{{classroom.description}}</p>
+                    {% endif %}
+
+                    {% if classroom.updated != classroom.created %}
+                        <span>(Updated)</span>
+                    {% endif %}
+                    <span>Created {{classroom.created|timesince}} ago</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="col border-start">
+        <h1>Activity Feed</h1><br>
+        {% for message in messagesChat %}
+            {% if request.user in message.classroom.participants.all or request.user.is_superuser %}
+                {% if forloop.counter < 5 %}
+                    <div class="rounded border p-3 m-3">
+                        <small>{{message.user}} {{message.created|timesince}} ago in {{message.classroom.name}} {% if message.updated != message.created %}(Updated){% endif %}</small>
+                        <p>{{message.body}}</p>
+                        <form method="POST" action="" class="mb-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="message_classroom" value="{{message.classroom.id}}" />
+                            <input type="text" class="form-control" placeholder="Reply..." name="new_message" />
+                        </form>
+                        {% if request.user.id == message.user.id or request.user.is_superuser %}
+                            <a href="{% url 'edit-message' message.id %}"><button class="btn btn-primary m-1">
+                                Edit
+                            </button></a>
+                            <a href="{% url 'delete-message' message.id %}"><button class="btn btn-outline-danger m-1">
+                                Delete
+                            </button></a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+</div>
+</div>
+
+{% endblock %}

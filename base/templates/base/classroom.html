@@ -1,0 +1,78 @@
+{% extends 'main.html' %}
+{% block content %}
+
+<div class="container"><div class="row">
+
+<div class="col-8">
+<div class="m-3">
+    <h5>{{classroon.subejct}}</h5>
+    <h1>{{classroom.name}}</h1>
+    <span>By: {{classroom.host}}</span>
+
+    {% if classroom.description != None %}
+        <br>
+        <p>{{classroom.description}}</p>
+    {% endif %}
+    <br>
+    {% if classroom.updated != None %}
+        <span>Updated: {{classroom.updated}}</span><br>
+    {% endif %}
+    <span>Created: {{classroom.created}}</span>
+    <br><br>
+
+
+    {% if request.user.id == classroom.host.id or request.user.is_superuser %}
+        <a href="{% url 'edit-classroom' classroom.id %}"><button class="btn btn-primary m-1">
+            Edit Classroom
+        </button></a>
+        <a href="{% url 'delete-classroom' classroom.id %}"><button class="btn btn-outline-danger m-1">
+            Delete Classroom
+        </button></a>
+    {% endif %}
+</div>
+
+<hr>
+<form method="POST" action="" style="position: absolute;" class="">
+    {% csrf_token %}
+    <input type="text" name="message" placeholder="Send a message..." class="rounded form-control">
+</form>
+<br><br>
+
+{% for message in messagesChat %}
+
+    <div class="m-3 rounded border p-3 w-75">
+        <span>{{message.user}}</span>
+        {% if message.updated != message.created %}
+            <span>(Updated)</span>
+        {% endif %}
+        <p>{{message.body}}</p>
+
+        <span>{{message.created|timesince}} ago</span>
+        {% if request.user.id == message.user.id or request.user.is_superuser %}
+            <a href="{% url 'edit-message' message.id %}"><button class="btn btn-primary m-1">
+                Edit
+            </button></a>
+            <a href="{% url 'delete-message' message.id %}"><button class="btn btn-outline-danger m-1">
+                Delete
+            </button></a>
+        {% endif %}
+    </div>
+
+{% endfor %}
+</div>
+
+<div class="col border-start m-1">
+    <h1 class="m-2">Participants</h1>
+    {% for participant in classroom.participants.all %}
+        <div class="m-3 border rounded p-2">{{participant.username}}</div>
+    {% endfor %}
+    <hr>
+    <form method="POST" action="" class="m-2">
+        {% csrf_token %}
+        <label class="form-label"><b>Add a participant</b></label><br>
+        <input type="text" name="participants_new" class="rounded form-control" placeholder="Enter Username..." />
+    </form>
+</div>
+
+</div></div>
+{% endblock %}
